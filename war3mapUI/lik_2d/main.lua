@@ -20,13 +20,16 @@ ui:onSetup(function(this)
         "attack\\07", "attack\\08", "attack\\09", "attack\\10", "attack\\11", "attack\\12",
         "attack\\13", "attack\\14", "attack\\15", "attack\\16", "attack\\17", "attack\\18", "attack\\19",
     }
-
+    
     stage.man = FrameAnimate(kit .. "->man", FrameGameUI)
         :relation(FRAME_ALIGN_CENTER, FrameGameUI, FRAME_ALIGN_CENTER, 0, 0)
         :size(0.2, 0.25)
-
-    stage.man:motion(stage.stand):duration(2):play(-1, true)
-
+    
+    stage.man:motion(stage.stand):duration(2)
+    async.call(PlayerLocal(),function()
+        stage.man:play(3, true)
+    end)
+    
     keyboard.onRelease(KEYBOARD["T"], "lik_2d", function()
         stage.man:motion(stage.stand):duration(2):play(-1)
     end)

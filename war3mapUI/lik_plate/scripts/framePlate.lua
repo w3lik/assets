@@ -1,10 +1,10 @@
 ---@param stage UI_LikPlateStage
 function likPlate_framePlate(kit, stage)
-
+    
     stage.plateInfoLeave = function()
         FrameTooltips():show(false, 0)
     end
-
+    
     stage.plateInfoEnter = function(evtData, field)
         ---@type Player
         local triggerPlayer = evtData.triggerPlayer
@@ -131,33 +131,33 @@ function likPlate_framePlate(kit, stage)
             FrameTooltips():content({ tips = tips }):show(true)
         end
     end
-
+    
     --- 信息
     local infoMargin = -0.002
     local infoWidth = 0.062
     local infoHeight = 0.032
     local infoAlpha = 220
     local infoFontSize = 10
-
+    
     stage.plateTopNameBlack = FrameBackdrop(kit .. "->plateTopNameBlack", FrameGameUI)
         :relation(FRAME_ALIGN_BOTTOM, FrameGameUI, FRAME_ALIGN_BOTTOM, 0.003, 0.102)
         :size(0.178, 0.011)
         :texture("Framework\\ui\\black.tga")
-
+    
     stage.plateTopName = FrameText(kit .. "->plateTopName", stage.plateTopNameBlack)
         :relation(FRAME_ALIGN_CENTER, stage.plateTopNameBlack, FRAME_ALIGN_CENTER, 0, 0)
         :textAlign(TEXT_ALIGN_CENTER)
         :fontSize(11)
-
+    
     --- 面板
     local plateTypes = { "Nil", "Unit", "Item" }
-
+    
     ---@type table<string,FrameBackdropTile[]>
     stage.plate = {}
-
+    
     ---@type table<string,FrameButton>
     stage.plateInfo = {}
-
+    
     --- 面板
     for _, t in ipairs(plateTypes) do
         local kp = kit .. "->plate->" .. t
@@ -167,7 +167,7 @@ function likPlate_framePlate(kit, stage)
             :size(0.19, 0.102)
             :texture("Framework\\ui\\black.tga")
             :show(false)
-
+        
         if (t == "Nil") then
             stage.plateNilMsg = FrameText(kp .. "->description", stage.plate[t])
                 :relation(FRAME_ALIGN_CENTER, stage.plate[t], FRAME_ALIGN_CENTER, 0, -0.005)
@@ -181,7 +181,7 @@ function likPlate_framePlate(kit, stage)
                 :fontSize(LAYOUT_ALIGN_CENTER, 10)
                 :fontSize(LAYOUT_ALIGN_RIGHT, 8)
                 :value(0, stage.plateBarW, stage.plateBarH)
-
+            
             stage.plateHP = FrameBar(kp .. "->hp", stage.plate[t])
                 :textLayout({ LAYOUT_ALIGN_CENTER, LAYOUT_ALIGN_RIGHT })
                 :relation(FRAME_ALIGN_BOTTOM, stage.plateMP, FRAME_ALIGN_TOP, 0, 0.0015)
@@ -189,12 +189,12 @@ function likPlate_framePlate(kit, stage)
                 :fontSize(LAYOUT_ALIGN_CENTER, 10)
                 :fontSize(LAYOUT_ALIGN_RIGHT, 8)
                 :value(0, stage.plateBarW, stage.plateBarH)
-
+            
             stage.plateShield = FrameBar(kp .. "->shield", stage.plate[t])
                 :relation(FRAME_ALIGN_BOTTOM, stage.plateHP, FRAME_ALIGN_TOP, 0, 0)
                 :texture("value", "bar\\gold")
                 :value(0, stage.plateBarW, stage.plateBarH / 8)
-
+            
             -- 攻击
             stage.plateInfo.attack = FrameLabel(kp .. "->info->attack", stage.plate[t])
                 :relation(FRAME_ALIGN_LEFT_TOP, stage.plate[t], FRAME_ALIGN_LEFT_BOTTOM, 0.005, 0.09)
@@ -206,7 +206,7 @@ function likPlate_framePlate(kit, stage)
                 :fontSize(infoFontSize)
                 :onEvent(EVENT.Frame.Enter, function(evtData) stage.plateInfoEnter(evtData, "attack") end)
                 :onEvent(EVENT.Frame.Leave, stage.plateInfoLeave)
-
+            
             -- 攻速
             stage.plateInfo.attackSpeed = FrameLabel(kp .. "->info->attackSpeed", stage.plate[t])
                 :relation(FRAME_ALIGN_LEFT_TOP, stage.plateInfo.attack, FRAME_ALIGN_LEFT_BOTTOM, 0, infoMargin)
@@ -218,7 +218,7 @@ function likPlate_framePlate(kit, stage)
                 :fontSize(infoFontSize)
                 :onEvent(EVENT.Frame.Enter, function(evtData) stage.plateInfoEnter(evtData, "attackSpeed") end)
                 :onEvent(EVENT.Frame.Leave, stage.plateInfoLeave)
-
+            
             -- 防御
             stage.plateInfo.defend = FrameLabel(kp .. "->info->defend", stage.plate[t])
                 :relation(FRAME_ALIGN_LEFT_TOP, stage.plateInfo.attack, FRAME_ALIGN_RIGHT_TOP, 0.04, 0)
@@ -230,7 +230,7 @@ function likPlate_framePlate(kit, stage)
                 :fontSize(infoFontSize)
                 :onEvent(EVENT.Frame.Enter, function(evtData) stage.plateInfoEnter(evtData, "defend") end)
                 :onEvent(EVENT.Frame.Leave, stage.plateInfoLeave)
-
+            
             -- 移动
             stage.plateInfo.move = FrameLabel(kp .. "->info->move", stage.plate[t])
                 :relation(FRAME_ALIGN_LEFT_TOP, stage.plateInfo.defend, FRAME_ALIGN_LEFT_BOTTOM, 0, infoMargin)
@@ -242,7 +242,7 @@ function likPlate_framePlate(kit, stage)
                 :fontSize(infoFontSize)
                 :onEvent(EVENT.Frame.Enter, function(evtData) stage.plateInfoEnter(evtData, "move") end)
                 :onEvent(EVENT.Frame.Leave, stage.plateInfoLeave)
-
+        
         elseif (t == "Item") then
             stage.plateItemIcon = FrameBackdrop(kp .. "->itemIcon", stage.plate[t])
                 :relation(FRAME_ALIGN_LEFT_TOP, stage.plate[t], FRAME_ALIGN_LEFT_BOTTOM, 0.005, 0.08)

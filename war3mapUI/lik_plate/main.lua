@@ -9,15 +9,15 @@ local kit = "lik_plate"
 local ui = UIKit(kit)
 
 ui:onSetup(function(this)
-
+    
     ---@class UI_LikPlateStage
     local stage = this:stage()
-
-    japi.FrameSetPoint(japi.FrameGetTooltip(), FRAME_ALIGN_LEFT_BOTTOM, FrameGameUI:handle(), FRAME_ALIGN_LEFT_BOTTOM, -0.2, -0.2)
-
+    
+    japi.DZ_FrameSetPoint(japi.DZ_FrameGetTooltip(), FRAME_ALIGN_LEFT_BOTTOM, FrameGameUI:handle(), FRAME_ALIGN_LEFT_BOTTOM, -0.2, -0.2)
+    
     likPlate_params(stage)
     likPlate_eventReaction(this)
-
+    
     likPlate_framePlate(kit, stage)
     likPlate_frameAbility(kit, stage)
     likPlate_frameItem(kit, stage)
@@ -108,7 +108,7 @@ function ui:updatePlate()
                     tmpData.defend = math.numberFormat(tmpData.selection:defend(), 2)
                 end
             end
-
+            
             local hpCur = math.floor(tmpData.selection:hpCur())
             local hp = math.floor(tmpData.selection:hp() or 0)
             local hpRegen = math.trunc(tmpData.selection:hpRegen(), 2)
@@ -262,7 +262,7 @@ function ui:updateAbility()
                                     tmpData.btn[i].border = "Framework\\ui\\nil.tga"
                                 else
                                     tmpData.btn[i].border = "btn\\border-white"
-                                    if (tmpData.selection:owner() == whichPlayer and storage[i] == Cursor():ability()) then
+                                    if (tmpData.selection:owner() == whichPlayer and storage[i] == cursor.currentData().ability) then
                                         tmpData.btn[i].border = "btn\\border-gold"
                                     end
                                 end
@@ -356,7 +356,7 @@ function ui:updateItem()
                                     tmpData.btn[i].text = reason
                                 end
                             end
-                            if (ab == Cursor():ability()) then
+                            if (ab == cursor.currentData().ability) then
                                 tmpData.btn[i].border = "btn\\border-gold"
                             end
                         end

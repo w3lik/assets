@@ -1,24 +1,24 @@
 ---@param stage UI_LikPlateStage
 function likPlate_frameItem(kit, stage)
-
+    
     local kitIt = kit .. "->item"
-
+    
     stage.item = FrameBackdrop(kitIt, FrameGameUI)
         :block(true)
         :relation(FRAME_ALIGN_LEFT_BOTTOM, FrameGameUI, FRAME_ALIGN_BOTTOM, 0.111, 0)
         :size(0.078, 0.098)
-
+    
     ---@type FrameButton[]
     stage.itemButton = {}
-
+    
     ---@type FrameText[]
     stage.itemCharges = {}
-
+    
     stage.itemSizeX = 0.032
     stage.itemSizeY = 0.0294
     stage.itemMarginX = 0.008
     stage.itemMarginY = 0.009
-
+    
     local raw = 2
     for i = 1, stage.itemMAX do
         local xo = 0.0040 + (i - 1) % raw * (stage.itemSizeX + stage.itemMarginX)
@@ -36,7 +36,7 @@ function likPlate_frameItem(kit, stage)
             end)
             :onEvent(EVENT.Frame.Enter,
             function(evtData)
-                if (Cursor():isFollowing() or Cursor():dragging()) then
+                if (cursor.isFollowing() or cursor.isDragging()) then
                     return
                 end
                 local selection = evtData.triggerPlayer:selection()
@@ -65,7 +65,7 @@ function likPlate_frameItem(kit, stage)
             end)
             :onEvent(EVENT.Frame.LeftClick,
             function(evtData)
-                if (Cursor():isFollowing() or Cursor():dragging()) then
+                if (cursor.isFollowing() or cursor.isDragging()) then
                     return
                 end
                 local selection = evtData.triggerPlayer:selection()
@@ -80,172 +80,95 @@ function likPlate_frameItem(kit, stage)
                 if (storage == nil) then
                     return
                 end
-                Cursor():itemQuote(storage[i])
+                if (storage[i]) then
+                    local ab = storage[i]:ability()
+                    if (isClass(ab, AbilityClass)) then
+                        cursor.quote(ab:targetType(), { ability = ab })
+                    end
+                end
             end)
-
+            :onEvent(EVENT.Frame.RightClick,
+            function(evtData)
+                if (cursor.isQuoting()) then
+                    return
+                end
+                local selection = evtData.triggerPlayer:selection()
+                if (false == isClass(selection, UnitClass)) then
+                    return
+                end
+                if (evtData.triggerPlayer ~= selection:owner()) then
+                    return
+                end
+                local slot = selection:itemSlot()
+                if (nil == slot) then
+                    return
+                end
+                local storage = slot:storage()
+                if (nil == storage) then
+                    return
+                end
+                local ob = storage[i]
+                local triggerFrame = evtData.triggerFrame
+                japi.DZ_FrameSetAlpha(triggerFrame:handle(), 0)
+                audio(Vcm("war3_MouseClick1"))
+                cursor.quote("follow", {
+                    object = ob,
+                    frame = triggerFrame,
+                    over = function()
+                        japi.DZ_FrameSetAlpha(triggerFrame:handle(), triggerFrame:alpha())
+                    end,
+                    ---@param evt evtOnMouseRightClickData
+                    rightClick = function(evt)
+                        local p = evt.triggerPlayer
+                        local sel = p:selection()
+                        if (isClass(sel, UnitClass) and sel:owner() == p) then
+                            local tarIdx = -1
+                            local tarType, tarObj
+                            local sto = sel:itemSlot():storage()
+                            for j = 1, stage.itemMAX do
+                                local it = sto[j]
+                                local btn = stage.itemButton[j]
+                                if (btn:isInner(evt.rx, evt.ry, false)) then
+                                    tarObj, tarType, tarIdx = it, "item", j
+                                    break
+                                end
+                            end
+                            if (-1 == tarIdx and stage.warehouseDrag:show()) then
+                                sto = p:warehouseSlot():storage()
+                                for w = 1, stage.warehouseMAX do
+                                    local it = sto[w]
+                                    local btn = stage.warehouseButton[w]
+                                    if (btn:isInner(evt.rx, evt.ry, false)) then
+                                        tarObj, tarType, tarIdx = it, "warehouse", w
+                                        break
+                                    end
+                                end
+                            end
+                            if (-1 ~= tarIdx and false == table.equal(ob, tarObj)) then
+                                if (tarType == "item") then
+                                    sync.send("slotSync", { "item_push", ob:id(), tarIdx, triggerFrame:id() })
+                                elseif (tarType == "warehouse") then
+                                    sync.send("slotSync", { "item_to_warehouse", ob:id(), tarIdx, triggerFrame:id() })
+                                end
+                                audio(Vcm("war3_MouseClick1"))
+                            else
+                                cursor.quoteOver()
+                            end
+                        else
+                            cursor.quoteOver()
+                        end
+                    end,
+                })
+            end)
+        
         stage.itemButton[i]:childMask():alpha(180)
         stage.itemButton[i]:childBorder():size(stage.itemSizeX * 1.05, stage.itemSizeY * 1.04)
-
+        
         -- 物品使用次数
         stage.itemCharges[i] = FrameButton(kit .. '->charges->' .. i, stage.itemButton[i])
             :relation(FRAME_ALIGN_RIGHT_BOTTOM, stage.itemButton[i], FRAME_ALIGN_RIGHT_BOTTOM, -0.0014, 0.0014)
             :texture(TEAM_COLOR_BLP_BLACK)
             :fontSize(7)
     end
-
-    --- right-sync
-
-    --- 跟踪回调
-    local onFollowChange = function(stopData, i)
-        local fi = stopData.i
-        local fo = stopData.followObj
-        if (fi <= stage.itemMAX and i <= stage.itemMAX) then
-            -- 物品 -> 物品
-            sync.send(kitIt .. "_SYNC", { "item_push", fo:id(), i, fi })
-            audio(Vcm("war3_MouseClick1"))
-        elseif (fi > stage.itemMAX and i > stage.itemMAX) then
-            -- 仓库 -> 仓库
-            sync.send(kitIt .. "_SYNC", { "warehouse_push", fo:id(), i - stage.itemMAX, fi - stage.itemMAX })
-            audio(Vcm("war3_MouseClick1"))
-        elseif (fi <= stage.itemMAX and i > stage.itemMAX) then
-            -- 物品 -> 仓库
-            sync.send(kitIt .. "_SYNC", { "item_to_warehouse", fo:id(), i - stage.itemMAX, fi })
-            audio(Vcm("war3_MouseClick1"))
-        elseif (fi > stage.itemMAX and i <= stage.itemMAX) then
-            -- 仓库 -> 物品
-            sync.send(kitIt .. "_SYNC", { "warehouse_to_item", fo:id(), i, fi - stage.itemMAX })
-            audio(Vcm("war3_MouseClick1"))
-        end
-    end
-
-    sync.receive(kitIt .. "_SYNC", function(syncData)
-        local syncPlayer = syncData.syncPlayer
-        local command = syncData.transferData[1]
-        if (command == "item_push") then
-            local itId = syncData.transferData[2]
-            local i = tonumber(syncData.transferData[3])
-            local fi = tonumber(syncData.transferData[4])
-            ---@type Item
-            local it = i2o(itId)
-            if (isClass(it, ItemClass)) then
-                syncPlayer:selection():itemSlot():insert(it, i)
-            end
-            japi.FrameSetAlpha(stage.itemButton[fi]:handle(), stage.itemButton[fi]:alpha())
-        elseif (command == "warehouse_push") then
-            local itId = syncData.transferData[2]
-            local i = tonumber(syncData.transferData[3])
-            local fi = tonumber(syncData.transferData[4])
-            ---@type Item
-            local it = i2o(itId)
-            if (isClass(it, ItemClass)) then
-                syncPlayer:warehouseSlot():insert(it, i)
-            end
-            japi.FrameSetAlpha(stage.warehouseButton[fi]:handle(), stage.warehouseButton[fi]:alpha())
-        elseif (command == "item_to_warehouse") then
-            local itId = syncData.transferData[2]
-            local wIdx = tonumber(syncData.transferData[3])
-            local fi = tonumber(syncData.transferData[4])
-            ---@type Item
-            local it = i2o(itId)
-            if (isClass(it, ItemClass)) then
-                local itIdx = it:itemSlotIndex()
-                syncPlayer:selection():itemSlot():remove(itIdx)
-                local wIt = syncPlayer:warehouseSlot():storage()[wIdx]
-                if (isClass(wIt, ItemClass)) then
-                    syncPlayer:warehouseSlot():remove(wIdx)
-                    syncPlayer:selection():itemSlot():insert(wIt, itIdx)
-                end
-                syncPlayer:warehouseSlot():insert(it, wIdx)
-            end
-            japi.FrameSetAlpha(stage.itemButton[fi]:handle(), stage.itemButton[fi]:alpha())
-        elseif (command == "warehouse_to_item") then
-            local wItId = syncData.transferData[2]
-            local itIdx = tonumber(syncData.transferData[3])
-            local fi = tonumber(syncData.transferData[4])
-            ---@type Item
-            local wIt = i2o(wItId)
-            if (isClass(wIt, ItemClass)) then
-                local wIdx = wIt:warehouseSlotIndex()
-                syncPlayer:warehouseSlot():remove(wIdx)
-                local it = syncPlayer:selection():itemSlot():storage()[itIdx]
-                if (isClass(it, ItemClass)) then
-                    syncPlayer:selection():itemSlot():remove(it, itIdx)
-                    syncPlayer:warehouseSlot():insert(it, wIdx)
-                end
-                syncPlayer:selection():itemSlot():insert(wIt, itIdx)
-            end
-            japi.FrameSetAlpha(stage.warehouseButton[fi]:handle(), stage.warehouseButton[fi]:alpha())
-        end
-    end)
-
-    mouse.onRightClick(kitIt .. "_mouse_right", function(evtData)
-        local triggerPlayer = evtData.triggerPlayer
-        local followObject = Cursor():followObj()
-        local ing = Cursor():isFollowing() or Cursor():dragging()
-        if (ing == true and isClass(followObject, ItemClass) == false) then
-            return
-        end
-        local selection = triggerPlayer:selection()
-        local iCheck = false
-        local wCheck = false
-        if (isClass(selection, 'Unit')) then
-            if (selection:isAlive() and selection:owner() == triggerPlayer) then
-                local itemSlot = selection:itemSlot()
-                if (itemSlot ~= nil) then
-                    for i = 1, stage.itemMAX do
-                        local it = itemSlot:storage()[i]
-                        local btn = stage.itemButton[i]
-                        if (true == btn:parent():show() and btn:isInner(nil, nil, false)) then
-                            if (ing == true) then
-                                if (table.equal(followObject, it) == false) then
-                                    Cursor():followStop(function(stopData)
-                                        onFollowChange(stopData, i)
-                                    end)
-                                else
-                                    Cursor():followStop()
-                                end
-                            elseif (isClass(it, ItemClass)) then
-                                FrameTooltips():show(false, 0)
-                                audio(Vcm("war3_MouseClick1"))
-                                japi.FrameSetAlpha(btn:handle(), 0)
-                                Cursor():followCall(it, { frame = btn, i = i }, function(stopData)
-                                    japi.FrameSetAlpha(stopData.frame:handle(), stopData.frame:alpha())
-                                end)
-                            end
-                            iCheck = true
-                            break
-                        end
-                    end
-                end
-            end
-        end
-        for i = 1, stage.warehouseMAX do
-            local it = triggerPlayer:warehouseSlot():storage()[i]
-            local btn = stage.warehouseButton[i]
-            if (true == btn:parent():show() and btn:isInner(nil, nil, false)) then
-                if (ing == true) then
-                    if (table.equal(followObject, it) == false) then
-                        Cursor():followStop(function(stopData)
-                            onFollowChange(stopData, stage.itemMAX + i)
-                        end)
-                    else
-                        Cursor():followStop()
-                    end
-                elseif (isClass(it, ItemClass)) then
-                    FrameTooltips():show(false, 0)
-                    audio(Vcm("war3_MouseClick1"))
-                    japi.FrameSetAlpha(btn:handle(), 0)
-                    Cursor():followCall(it, { frame = btn, i = stage.itemMAX + i }, function(stopData)
-                        japi.FrameSetAlpha(stopData.frame:handle(), stopData.frame:alpha())
-                    end)
-                end
-                wCheck = true
-                break
-            end
-        end
-        if (iCheck == false and wCheck == false and ing == true) then
-            Cursor():followStop()
-        end
-    end)
 
 end

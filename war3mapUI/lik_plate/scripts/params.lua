@@ -1,13 +1,13 @@
 ---@param stage UI_LikPlateStage
 function likPlate_params(stage)
-
+    
     stage.plateBarW = 0.0772
     stage.plateBarH = 0.013
-
+    
     stage.abilityMAX = #Game():abilityHotkey()
-
+    
     stage.itemMAX = #Game():itemHotkey()
-
+    
     stage.warehouseMAX = Game():warehouseSlot()
     stage.warehouseRaw = 4
     stage.warehouseSize = 0.03

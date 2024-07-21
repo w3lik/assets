@@ -4,40 +4,40 @@
 ]]
 
 if (DEBUGGING) then
-
+    
     collectgarbage("collect")
     local ram = collectgarbage("count")
-
+    
     local kit = "lik_debug"
-
+    
     ---@class UI_LikDebug:UIKit
     local ui = UIKit(kit)
-
+    
     ui:onSetup(function(this)
-
+        
         ---@class UI_LikDebugStage
         local stage = this:stage()
-
+        
         stage.infoIndex = 1
-
+        
         stage.main = FrameText(kit, FrameGameUI)
             :relation(FRAME_ALIGN_LEFT_BOTTOM, FrameGameUI, FRAME_ALIGN_LEFT_BOTTOM, 0.001, 0.20)
             :textAlign(TEXT_ALIGN_LEFT)
             :fontSize(7)
-
+        
         stage.ram = FrameText(kit .. "->ram", FrameGameUI)
             :adaptive(true)
-            :relation(FRAME_ALIGN_TOP, FrameGameUI, FRAME_ALIGN_TOP, -0.25, -0.03)
+            :relation(FRAME_ALIGN_RIGHT_TOP, FrameGameUI, FRAME_ALIGN_TOP, -0.06, -0.03)
             :textAlign(TEXT_ALIGN_LEFT)
             :fontSize(8)
-
+        
         stage.mark = FrameBackdrop(kit .. "->mark", FrameGameUI)
             :relation(FRAME_ALIGN_CENTER, FrameGameUI, FRAME_ALIGN_CENTER, 0, 0)
             :size(2, 2)
             :alpha(100)
             :texture(TEAM_COLOR_BLP_BLACK)
             :show(false)
-
+        
         ---@type FrameBackdropTile[]
         stage.line = {}
         local graduation = 0.05
@@ -69,7 +69,7 @@ if (DEBUGGING) then
                 :text(colour.hex(txtColor, graduation * i))
             table.insert(stage.line, tile)
         end
-
+        
         stage.costAvg = stage.costAvg or {}
         stage.types = { "all", "max" }
         stage.typesLabel = {
@@ -102,7 +102,7 @@ if (DEBUGGING) then
             ["wdvt"] = "可破坏物事件",
         }
     end)
-
+    
     ---@param this UI_LikDebug
     ui:onRefresh(0.2, function(this)
         ---@type UI_LikDebugStage
@@ -128,7 +128,7 @@ if (DEBUGGING) then
             end)
         end
     end)
-
+    
     function ui:mem()
         ---@type UI_LikDebugStage
         local stage = self:stage()
@@ -145,22 +145,22 @@ if (DEBUGGING) then
             stage.costAvg = { avg }
         end
         return {
-            "FPS : " .. math.format(japi.FPS(), 1),
+            "FPS : " .. math.format(japi.DZ_GetFPS() / 100, 1),
             colour.hex(colour.skyblue, "平均 : " .. math.format(avg, 3) .. ' MB'),
             colour.hex(colour.littlepink, "最大 : " .. math.format(stage.costMax, 3) .. ' MB'),
             colour.hex(colour.gold, "当前 : " .. math.format(cost, 3) .. ' MB'),
         }
     end
-
+    
     function ui:debug()
         ---@type UI_LikDebugStage
         local stage = self:stage()
         local txts = {}
         if (stage.infoIndex == 1) then
-            local count = { all = 0, max = J.handleMax() }
+            local count = { all = 0, max = J.HandleMax() }
             for i = 1, count.max do
                 local h = 0x100000 + i
-                local info = J.handleDef(h)
+                local info = J.HandleDef(h)
                 if (info and info.type) then
                     if (not table.includes(stage.types, info.type)) then
                         table.insert(stage.types, info.type)
