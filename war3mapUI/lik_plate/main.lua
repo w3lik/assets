@@ -430,22 +430,6 @@ function ui:updateWarehouse()
                 tmpData.btn[i].border = "btn\\border-white"
                 tmpData.btn[i].maskValue = 0
                 tmpData.charge[i] = math.floor(it:charges())
-                local ab = it:ability()
-                if (isClass(ab, AbilityClass)) then
-                    if (ab:coolDown() > 0 and ab:coolDownRemain() > 0) then
-                        tmpData.btn[i].maskValue = ab:coolDownRemain() / ab:coolDown()
-                        tmpData.btn[i].text = math.trunc(ab:coolDownRemain(), 1)
-                    elseif (ab:isProhibiting() == true) then
-                        local reason = ab:prohibitReason()
-                        tmpData.btn[i].maskValue = 1
-                        if (reason == nil) then
-                            tmpData.btn[i].text = ''
-                        else
-                            tmpData.btn[i].border = "Framework\\ui\\nil.tga"
-                            tmpData.btn[i].text = reason
-                        end
-                    end
-                end
             end
         end
         stage.warehouseCell:text(tmpData.cell)
